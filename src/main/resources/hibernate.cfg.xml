@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE hibernate-configuration PUBLIC
+    "-//Hibernate/Hibernate Configuration DTD//EN"
+    "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+  <session-factory>
+    <property name="connection.url">jdbc:postgresql://localhost:5432/postgres</property>
+    <property name="connection.username">postgres</property>
+    <property name="connection.password">root</property>
+    <property name="connection.driver_class">org.postgresql.Driver</property>
+    <property name="hibernate.dialect">org.hibernate.dialect.PostgreSQL10Dialect</property>
+    <property name="show_sql">true</property>
+    <property name="format_sql">true</property>
+    <property name="hibernate.hbm2ddl.auto">create</property>
+    <mapping class="by.itacademy.hibernate.entity.User"/>
+    <mapping class="by.itacademy.hibernate.entity.Company"/>
+    <mapping class="by.itacademy.hibernate.entity.Profile"/>
+    <mapping class="by.itacademy.hibernate.entity.Chat"/>
+    <mapping class="by.itacademy.hibernate.entity.UserChat"/>
+    <mapping class="by.itacademy.hibernate.entity.Payment"/>
+<!--    <property name="connection_pool_size">1</property>-->
+
+  </session-factory>
+</hibernate-configuration>
