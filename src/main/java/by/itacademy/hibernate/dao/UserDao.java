@@ -4,11 +4,13 @@ package by.itacademy.hibernate.dao;
 import by.itacademy.hibernate.entity.Payment;
 import by.itacademy.hibernate.entity.User;
 import lombok.AccessLevel;
+import lombok.Cleanup;
 import lombok.NoArgsConstructor;
 import org.hibernate.Session;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class UserDao {
@@ -19,28 +21,36 @@ public class UserDao {
      * Возвращает всех сотрудников
      */
     public List<User> findAll(Session session) {
-        return Collections.emptyList();
+        return session.createQuery("select u from User u", User.class).list();
     }
 
     /**
      * Возвращает всех сотрудников с указанным именем
      */
     public List<User> findAllByFirstName(Session session, String firstName) {
-        return Collections.emptyList();
+        return session.createQuery("select u from User u where u.personalInfo.firstname =:name")
+                .setParameter("name", firstName)
+                .list();
     }
 
     /**
      * Возвращает первые {limit} сотрудников, упорядоченных по дате рождения (в порядке возрастания)
      */
     public List<User> findLimitedUsersOrderedByBirthday(Session session, int limit) {
-        return Collections.emptyList();
+        return session.createQuery("select u from User u order by u.personalInfo.birthDate", User.class)
+                .setMaxResults(limit)
+                .list();
     }
 
     /**
      * Возвращает всех сотрудников компании с указанным названием
      */
     public List<User> findAllByCompanyName(Session session, String companyName) {
-        return Collections.emptyList();
+        return session.createQuery("select u from Company c " +
+                                   "inner join c.users u " +
+                                   "where c.name = :company_name", User.class)
+                .setParameter("company_name", companyName)
+                .list();
     }
 
     /**
@@ -48,21 +58,38 @@ public class UserDao {
      * упорядоченные по имени сотрудника, а затем по размеру выплаты
      */
     public List<Payment> findAllPaymentsByCompanyName(Session session, String companyName) {
-        return Collections.emptyList();
+        return session.createQuery("select p from Payment p " +
+                                   "inner join p.receiver u " +
+                                   "inner join u.company c " +
+                                   "where c.name =:company_name", Payment.class)
+                .setParameter("company_name", companyName)
+                .list();
+
     }
 
     /**
      * Возвращает среднюю зарплату сотрудника с указанными именем и фамилией
      */
     public Double findAveragePaymentAmountByFirstAndLastNames(Session session, String firstName, String lastName) {
-        return Double.NaN;
+        return session.createQuery("select avg(p.amount) from Payment p " +
+                                   "inner join p.receiver u " +
+                                   "where u.personalInfo.firstname =:firstName " +
+                                   "and u.personalInfo.lastname =:lastName ", Double.class)
+                .setParameter("firstName", firstName)
+                .setParameter("lastName", lastName)
+                .uniqueResult();
     }
 
     /**
      * Возвращает для каждой компании: название, среднюю зарплату всех её сотрудников. Компании упорядочены по названию.
      */
     public List<Object[]> findCompanyNamesWithAvgUserPaymentsOrderedByCompanyName(Session session) {
-        return Collections.emptyList();
+        return session.createQuery("select c.name, avg(p.amount) from Payment p " +
+                                   "join p.receiver u " +
+                                   "join u.company c " +
+                                   "group by c.name " +
+                                   "order by c.name ", Object[].class)
+                .list();
     }
 
     /**
@@ -71,7 +98,12 @@ public class UserDao {
      * Упорядочить по имени сотрудника
      */
     public List<Object[]> isItPossible(Session session) {
-        return Collections.emptyList();
+        return session.createQuery("select u, avg(p.amount) from User u " +
+                                   "join u.payments p " +
+                                   "group by u " +
+                                   "having avg(p.amount)>(select avg(p.amount) from Payment p) " +
+                                   "order by u.personalInfo.firstname ", Object[].class)
+                .list();
     }
 
     public static UserDao getInstance() {

@@ -20,7 +20,9 @@ public class User implements Comparable<User>, BaseEntity<Long> {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+
     @AttributeOverride(name = "birthDate", column = @Column(name = "birth_date"))
+    @Embedded
     private PersonalInfo personalInfo;
 
     @Column(unique = true)
