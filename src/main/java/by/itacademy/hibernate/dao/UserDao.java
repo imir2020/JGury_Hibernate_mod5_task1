@@ -135,6 +135,94 @@ public class UserDao {
                 .orderBy(user.personalInfo().firstname.asc())
                 .fetch();
     }
+    /**
+     * Возвращает всех сотрудников с их средней зарплатой.
+     */
+    public List<Tuple> usersAvgPayments(Session session) {
+        return new JPAQuery<Tuple>(session)
+                .select(user, payment.amount.avg())
+                .from(payment)
+                .join(payment.receiver(),user)
+                .groupBy(user.id)
+                .fetch();
+    }
+
+    /**
+     * Возвращает список: сотрудник (объект User), средний размер выплат,
+     * но только для тех сотрудников, чей средний размер выплат
+     * меньше или равен среднему размеру выплат всех сотрудников
+     * Упорядочить по фамилии сотрудника
+     */
+    public List<Tuple> paymentsLessUserAvgPayment(Session session) {
+        return new JPAQuery<Tuple>(session)
+                .select(user, payment.amount.avg())
+                .from(user)
+                .join(user.payments, payment)
+                .groupBy(user.id)
+                .where(payment.amount.lt(
+                        new JPAQuery<Double>(session)
+                                .select(payment.amount.avg())
+                                .from(payment)
+                ))
+                .orderBy(user.personalInfo().lastname.desc(),payment.amount.avg().desc())
+                .fetch();
+    }
+
+    /**
+     * Возвращает всех сотрудников с указанной фамилией и выплатами
+     */
+    public List<Payment> userWithLastNameAndPayments(Session session, String lastname) {
+        return new JPAQuery<Payment>(session)
+                .select(payment)
+                .from(payment)
+                .join(payment.receiver(),user)
+                .where(user.personalInfo().lastname.eq(lastname))
+                .fetch();
+    }
+
+    /**
+     * Возвращает всех сотрудников, упорядоченных по среднему размеру выплат
+     * (в порядке УБЫВАНИЯ)
+     */
+    public List<User> usersOrderedByAvgPayments(Session session) {
+        return new JPAQuery<User>(session)
+                .select(user)
+                .from(user)
+                .leftJoin(user.payments, payment)
+                .groupBy(user)
+                .orderBy(payment.amount.avg().desc())
+                .fetch();
+    }
+
+    /**
+     * Возвращает для каждой компании: название, возраст всех её сотрудников.
+     * Компании и возраст сотрудников упорядочены(компании упорядочены по названию).
+     */
+    public List<Tuple> companyNameBirthDayUsers(Session session) {
+        return new JPAQuery<Tuple>(session)
+                .select(company, user.personalInfo().birthDate)
+                .from(user)
+                .join(user.company(), company)
+                .groupBy(company.id, user.personalInfo().birthDate)
+                .orderBy(company.name.asc(), new OrderSpecifier(Order.ASC,user.personalInfo().birthDate))
+                .fetch();
+    }
+
+
+    /**
+     количество сотрудников в заданной компании.
+     */
+    public List<Long> fullNameUsersInOneCompany(Session session, String companyName) {
+        return new JPAQuery<Long>(session)
+                .select(user.count())
+                .from(user)
+                .join(user.company(),company)
+                .groupBy(company.name)
+                .where(company.name.eq(companyName))
+                .orderBy(company.name.asc())
+                .fetch();
+    }
+
 
     public static UserDao getInstance() {
         return INSTANCE;

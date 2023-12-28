@@ -2,6 +2,8 @@ package by.itacademy.hibernate.utils.dao;
 
 
 import by.itacademy.hibernate.dao.UserDao;
+import by.itacademy.hibernate.entity.Birthday;
+import by.itacademy.hibernate.entity.Company;
 import by.itacademy.hibernate.utils.TestDataImporter;
 import by.itacademy.hibernate.entity.Payment;
 import by.itacademy.hibernate.entity.User;
@@ -15,10 +17,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 
 @TestInstance(PER_CLASS)
@@ -149,6 +154,81 @@ class UserDaoTest {
         List<Double> averagePayments = results.stream().map(r -> r.get(1,Double.class)).collect(toList());
         assertThat(averagePayments).contains(500.0, 450.0);
 
+        session.getTransaction().commit();
+    }
+    @Test
+    void usersAvgPayments() {
+        @Cleanup Session session = sessionFactory.openSession();
+        session.beginTransaction();
+        List<Tuple> result = userDao.usersAvgPayments(session);
+        List<String> users = result.stream().map(r -> (r.get(0, User.class)).fullName()).toList();
+
+        List<Double> avgPayments = result.stream().map(r -> r.get(1, Double.class)).toList();
+        assertEquals(users.size(), avgPayments.size());
+        session.getTransaction().commit();
+    }
+
+    @Test
+    void paymentsLessUserAvgPayment() {
+        @Cleanup Session session = sessionFactory.openSession();
+        session.beginTransaction();
+        List<Tuple> result = userDao.paymentsLessUserAvgPayment(session);
+        List<String> fullNames = result.stream().map(r -> (r.get(0, User.class)).fullName()).toList();
+        List<Double> avgPayments = result.stream().map(r -> r.get(1, Double.class)).toList();
+
+        fullNames.forEach(System.out::println);
+        avgPayments.forEach(System.out::println);
+        assertTrue(avgPayments.size() != 0);
+        session.getTransaction().commit();
+    }
+
+    @Test
+    void userWithLastNameAndPayments() {
+        @Cleanup Session session = sessionFactory.openSession();
+        session.beginTransaction();
+        List<Payment> results = userDao.userWithLastNameAndPayments(session, "Gates");
+        assertThat(results).hasSize(3);
+        List<Integer> amounts = results.stream().map(Payment::getAmount).toList();
+        assertThat(amounts).contains(100, 300, 500);
+        session.getTransaction().commit();
+    }
+
+    @Test
+    void usersOrderedByAvgPayments() {
+        @Cleanup Session session = sessionFactory.openSession();
+        session.beginTransaction();
+        List<User> result = userDao.usersOrderedByAvgPayments(session);
+
+        List<String> fullNames = result.stream().map(User::fullName).toList();
+        fullNames.forEach(System.out::println);
+        assertTrue(fullNames.size() != 0);
+
+        session.getTransaction().commit();
+    }
+
+    @Test
+    void companyNameBirthDayUsers() {
+        @Cleanup Session session = sessionFactory.openSession();
+        session.beginTransaction();
+        List<Tuple> result = userDao.companyNameBirthDayUsers(session);
+        List<String> companyName = result.stream().map(r -> (r.get(0, Company.class)).getName()).toList();
+        assertThat(companyName).hasSize(5);
+        assertThat(companyName).contains("Apple", "Apple", "Google", "Google", "Microsoft");
+
+        List<LocalDate> birthdayList = result.stream().map(r -> (r.get(1, Birthday.class)).birthDate()).toList();
+        birthdayList.forEach(System.out::println);
+        assertThat(birthdayList).hasSize(5);
+        session.getTransaction().commit();
+    }
+
+    @Test
+    void fullNameUsersOnTheCompany() {
+        @Cleanup Session session = sessionFactory.openSession();
+        session.beginTransaction();
+        List<Long> usersInOneCompany = userDao.fullNameUsersInOneCompany(session, "Google");
+        assertThat(usersInOneCompany).hasSize(1);
+        assertEquals(usersInOneCompany.get(0),2);
+        usersInOneCompany.forEach(System.out::println);
         session.getTransaction().commit();
     }
 }
