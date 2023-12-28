@@ -212,15 +212,15 @@ public class UserDao {
     /**
      количество сотрудников в заданной компании.
      */
-    public List<Long> fullNameUsersInOneCompany(Session session, String companyName) {
+    public Long countUsersInOneCompany(Session session, String companyName) {
         return new JPAQuery<Long>(session)
                 .select(user.count())
                 .from(user)
-                .join(user.company(),company)
+                .join(user.company(), company)
                 .groupBy(company.name)
                 .where(company.name.eq(companyName))
                 .orderBy(company.name.asc())
-                .fetch();
+                .fetchOne();
     }
 
 

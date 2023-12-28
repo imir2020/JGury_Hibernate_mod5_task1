@@ -22,8 +22,7 @@ import java.util.List;
 
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 
 @TestInstance(PER_CLASS)
@@ -222,13 +221,12 @@ class UserDaoTest {
     }
 
     @Test
-    void fullNameUsersOnTheCompany() {
+    void countUsersOnTheCompany() {
         @Cleanup Session session = sessionFactory.openSession();
         session.beginTransaction();
-        List<Long> usersInOneCompany = userDao.fullNameUsersInOneCompany(session, "Google");
-        assertThat(usersInOneCompany).hasSize(1);
-        assertEquals(usersInOneCompany.get(0),2);
-        usersInOneCompany.forEach(System.out::println);
+        Long countUsersInOneCompany = userDao.countUsersInOneCompany(session, "Google");
+        assertNotNull(countUsersInOneCompany);
+        assertEquals(countUsersInOneCompany,2);
         session.getTransaction().commit();
     }
 }
